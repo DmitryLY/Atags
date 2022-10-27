@@ -1,0 +1,498 @@
+{{ header }}
+
+{{ column_left }}
+
+{# 
+(C) 2022 Dmitry Y. Lepikhin 
+#}
+
+
+<div id="content">
+  <div class="page-header">
+    <div class="container-fluid">
+ 
+      <div class="pull-right">
+        <span id="refresh_binding_cont">
+          <atags-button-refresh ></atags-button-refresh>
+        </span>
+        <button data-atags-template="button_refresh" ref="button" @click="refresh_binding()" data-toggle="tooltip" title="Перепривязать продукты" id="refresh_binding" class="btn btn-default"><i class="fa fa-refresh"></i></button>
+        <a href="{{ cancel }}" data-toggle="tooltip" title="{{ button_cancel }}" class="btn btn-default"><i class="fa fa-reply"></i></a>
+      </div>
+ 
+      <h1>{{ heading_title }}</h1>
+ 
+      <ul class="breadcrumb">
+        {% for breadcrumb in breadcrumbs %}
+        <li><a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
+        {% endfor %}
+      </ul>
+ 
+    </div>
+  </div>
+
+    <div class="container-fluid">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title"><i class="fa fa-pencil"></i> {{ heading_title }}</h3>
+            </div>
+            <div class="panel-body">
+                    {% if warning_permission %}
+                        <div class="alert alert-danger alert-dismissible"><i class="fa fa-exclamation-circle"></i> {{warning_permission}} </div> 
+                    {% endif %}
+
+                    <div id="atags_container">
+                      <atags-tabs :current="current"></atags-tabs>
+                      <atags-content :current="current"></atags-content>
+                      
+                      <template data-atags-template="content">
+                        <atags-list v-if="current.main" :current="current" ></atags-list>
+                        <atags-settings v-else-if="current.setting" :current="current" ></atags-settings>
+                        <atags-page v-else :current="current" ></atags-page>
+                      </template>
+                    </div>
+
+                    <div id="atags_tabs" data-atags-template="tabs">
+                      
+                      <atags-tab :tab="settings" :current="current"></atags-tab>
+                    
+                      <atags-tab v-for="tab in tabs" :tab="tab" :current="current"></atags-tab>
+                      <span @click="createTab()" class="pointer_"><i class="fa fa-plus"></i></span>
+
+                      <template data-atags-template="tab">
+                        <div class="atags_tab" :class="{ atags_tab_current: tab === current, atags_tab_main: tab.main, atags_tab_settings: tab.setting , create_tab: !tab.tag_id ,save_tab: tab.tag_id && tab.changed }" @click="setCurrent(tab)"><template v-if="tab.main || tab.setting">\{\{tab.title\}\}</template><template v-else><template v-if="tab.tag_id">\{\{tab.tag_id\}\} — </template>\{\{ tab.langs[language_index].name \}\}</template><span v-if="!tab.main && !tab.setting" class="close" @click="closeTab(tab,$event)">×</span></div>
+                        <div class="atags_tab_vert_line"></div>
+                      </template>
+                      
+                    </div>
+
+                    <div id="atags_list" data-atags-template="list" :class="{atags_current_page: current}">
+                      
+                      <div id="atags_list_filter">
+                          <div>
+                            <label for="atags_list_filter_name">
+                              Название тэга
+                              <input v-model="current.query_string" id="atags_list_filter_name" type="text"/>
+                            </label>
+                            <label for="atags_list_filter_store">
+                              Магазин
+                              <select v-model="current.query_store_id" id="atags_list_filter_store">
+                                <option value="all" selected>Все</option>
+                                <option value="0">Основной</option>
+                              </select>
+                            </label>
+                            
+                            <span class="pointer_" @click="getTags()"><i v-if="current.loading_filter" class="fa fa-circle-o-notch"></i><i v-else class="fa fa-filter"></i></span>
+
+                          </div>
+                      </div>
+                      
+                      <div v-if="current.list_limit.length" id="atags_list_tags">
+                        <atags-list-item v-for="item in current.list_limit" :item="item"></atags-list-item>
+                        <div data-atags-template="list_item" class="atags_list_tag">
+                          <span class="atags_list_tag_edit pointer_" @click="createTab(item.tag_id)" data-toggle="tooltip" title="Редактировать"><i class="fa fa-pencil"></i></span>
+                          <span @click="createTab(item.tag_id , true)" class="atags_list_tag_copy pointer_"  data-toggle="tooltip" title="Копировать"><i class="fa fa-copy"></i></span>
+                          {#<span class="atags_list_tag_view pointer_"><i class="fa fa-eye"></i></span>#}
+                          <span class="atags_list_tag_delete pointer_" @click="deleteTag( item )" data-toggle="tooltip" title="Удалить"><i class="fa fa-times"></i></span>
+                          <span class="atags_list_tag_name">\{\{item.name\}\}</span> {#— <span class="atags_list_tag_store">\{\{item.store\}\}</span>#}
+                        </div>
+                      </div>
+
+                      <div v-if="!current.list_limit.length" class="atags_list_tag">Нет тэгов</div>
+
+                      <div v-if="current.list.length > current.limit" id="atags_list_pagination">
+                        <ul>
+
+                          <atags-pagination v-for="page in getPages()" :page="page" :active_page="current.page"></atags-pagination>
+
+                          <li data-atags-template="pagination" :class="{ atags_list_tags_active: (page == active_page) }" @click="setPage(page)">\{\{page\}\}</li>
+                          
+                        </ul>
+                      </div>
+
+                    </div>
+                    
+                    <div data-atags-template="settings" id="setting_page">
+                    
+                      <div>
+                        <label for="atags_tag_page_status"> 
+                          Статус плагина
+                        </label>
+                        <select name="status" id="atags_tag_page_status" v-model="current.status"> 
+                          <option value="1" >Включен</option>
+                          <option value="0" >Отключен</option>
+                        </select>
+                      </div>
+
+                        <atags-button :current="current" ></atags-button>
+
+                    </div>
+
+                    
+
+                    <div id="atags_tag_page" data-atags-template="tag_page" >
+                      
+                      <div>
+                        <label for="atags_tag_page_status"> 
+                          Статус тэга
+                        </label>
+                        <select name="status" id="atags_tag_page_status" v-model="current.status"> 
+                          <option value="1" >Включен</option>
+                          <option value="0" >Отключен</option>
+                        </select>
+                      </div>
+
+                      <div class="atags_languages_tabs">
+                        <atags-languages-tabs v-for="lang in current.langs" :lang="lang" :current="current"></atags-languages-tabs>
+
+                        <div data-atags-template="languages_tabs" class="pointer_" @click="setLang(current,lang)" :class="{atags_active_lang: current.current_lang === lang, error: current.errors.langs &&  current.errors.langs[lang.language_id] }">\{\{lang.name_lang\}\} </div>
+
+                      </div>
+
+                          <div class="form-horizontal" id="language_desc" data-atags-template="language_desc">
+                    
+                            <div class="row form-group">
+                              <label for="atags_tag_page_name" class="col-sm-2 control-label"> 
+                                Название
+                              </label>
+                              <div class="col-sm-10">
+
+                               <atags-input-desc :current="current" :field="'name'"></atags-input-desc>
+
+                               <template data-atags-template="input_desc">
+                                <textarea v-if="field == 'description'" rows="5" name="desc" id="atags_tag_page_desc" type="text" class="form-control" v-model="current.current_lang.description" ></textarea>
+                                
+                                <input v-else-if=" field == 'name' || field == 'short_name' || field == 'full_name' || field == 'meta_title' " name="name" class="form-control" id="atags_tag_page_name" :class="{error: current.errors.langs && current.errors.langs[current.current_lang.language_id] && current.errors.langs[current.current_lang.language_id][field]}" type="text" v-model="current.current_lang[field]"/>
+                                <input v-else  class="form-control" type="text" v-model="current.current_lang[field]"/> 
+                                <div class="error" v-if="current.errors.langs && current.errors.langs[current.current_lang.language_id] && current.errors.langs[current.current_lang.language_id][field]" v-html="current.errors.langs && current.errors.langs[current.current_lang.language_id] && current.errors.langs[current.current_lang.language_id][field]"></div>
+                               </template>
+
+                              </div>
+                            </div>
+                            <div class="row form-group">
+                              <label for="atags_tag_page_short_name" class="col-sm-2 control-label"> 
+                                Короткое название
+                              </label>
+                              <div class="col-sm-10">
+                               <atags-input-desc :current="current" :field="'short_name'"></atags-input-desc>
+
+                              </div>
+                            </div>
+                            <div class="row form-group">
+                              <label for="atags_tag_page_full_name" class="col-sm-2 control-label"> 
+                                Полное название
+                              </label>
+                              <div class="col-sm-10">
+                               <atags-input-desc :current="current" :field="'full_name'"></atags-input-desc>
+
+                              </div>
+                            </div>
+                            <div class="row form-group">
+                              <label for="atags_tag_page_title" class="col-sm-2 control-label"> 
+                                Meta title
+                              </label>
+                              <div class="col-sm-10">
+                               <atags-input-desc :current="current" :field="'meta_title'"></atags-input-desc>
+
+                              </div>
+                            </div>
+                            <div class="row form-group">
+                              <label for="atags_tag_page_header" class="col-sm-2 control-label"> 
+                                Header H1
+                              </label>
+                              <div class="col-sm-10">
+                               <atags-input-desc :current="current" :field="'header_h1'"></atags-input-desc>
+
+                              </div>
+                            </div>
+                            <div class="row form-group">
+                              <label for="atags_tag_page_meta_desc" class="col-sm-2 control-label"> 
+                                Meta description
+                              </label>
+                              <div class="col-sm-10">
+                               <atags-input-desc :current="current" :field="'meta_description'"></atags-input-desc>
+
+                              </div>
+                            </div>
+                            <div class="row form-group">
+                              <label for="atags_tag_page_meta_desc" class="col-sm-2 control-label"> 
+                                SEO URL
+                              </label>
+                              <div class="col-sm-10">
+
+                              <atags-stores-seo-keywords v-for="store in current.current_lang.seo_keyword" :store="store" :current="current" :errors.langs=" current.errors.langs && current.errors.langs[current.current_lang.language_id]" > </atags-stores-seo-keywords>
+
+                                <div class="row" data-atags-template="stores_seo_keywords">
+                                  <label for="atags_tag_page_meta_desc" class="col-sm-2 control-label" v-html="store.name"> 
+                                  </label>
+                                  <div class="col-sm-10">
+                                    <input name="seo_keyword" ref="input" id="atags_tag_page_meta_desc" class="form-control" type="text" @input=" check_keyword() " :class="{error: errors && errors.seo_keyword && errors.seo_keyword[store.store_id]}" v-model="store.keyword"/> 
+                                    <div class="error" v-if="errors && errors.seo_keyword && errors.seo_keyword[store.store_id]" v-html="errors.seo_keyword[store.store_id]"></div>
+                                  </div>
+                                </div>
+
+                              </div>
+                            </div>
+                            <div class="row form-group">
+                              <label for="atags_tag_page_desc" class="col-sm-2 control-label"> 
+                                Описание
+                              </label>
+                              <div class="col-sm-10">
+                               <atags-input-desc :current="current" :field="'description'"></atags-input-desc>
+
+                              </div>
+                            </div>
+
+                          </div>
+
+                        
+                          
+                          <div class="atags_language_desc">
+                            <atags-language-desc :current="current"></atags-languages-desc>
+                          </div>
+
+                          <div>
+                            <h3>Магазины</h3>
+                            <div class="atags_body stores">
+                              <atags-stores v-for="item in stores" :item="item" :current="current" ></atags-stores>
+                              <label data-atags-template="stores" >
+                                <input ref="input" @click="selectStores(item)" type="checkbox" :checked="this.checkStore(item.store_id)" /> <span v-html="item.name">\{\{ item.name \}\}</span>
+                              </label>
+                            </div>
+                          </div>
+
+                          <div>
+                            <h3>Категория</h3>
+
+                            <div class="atags_body">
+                            
+                              <div class="bound_criterion">
+                                <div class="row">
+                                  <div class="col-sm-5">
+                                    <atags-input-finder v-model="current.inputs.category.category_value" :list="current.inputs.category.category_finder" :container="current.inputs.category" :what="'category'" :find="'categories'" ></atags-input-finder>
+                                  </div>
+                                </div>
+                                <div class="container_values atags_bound_values_items">
+                                    <atags-bound-values-item :item="current.category"  ></atags-bound-values-item>
+                                </div>
+                              </div>
+                            </div>
+
+                          </div>
+                          
+                          <div>
+                            <h3>Привязать продукты по критериям</h3>
+
+                            <div class="atags_body">
+
+                                <div class="bound_criterion">
+                                  <div class="row">
+                                    <div class="col-sm-5">
+                                      <h4> 
+                                        Категории
+                                      </h4>
+                                    </div>
+                                  </div>
+                                  <div class="row">
+                                    <div class="col-sm-5">
+                                        <atags-input-finder :find="'categories'" v-model="current.inputs.categories.categories_value" :list="current.inputs.categories.categories_finder" :container="current.inputs.categories" :what="'categories'" ></atags-input-finder>
+                                        
+                                    </div>
+                                      <atags-add-bound-value :container="current" :to="'categories'" ></atags-add-bound-value>
+                                  </div>
+                                  
+                                  <div class="container_values atags_bound_values_items">
+                                      <atags-bound-values-item v-for="item in current.bound_values.categories" :item="item" :items="current.bound_values.categories" :to="'categories'"></atags-bound-values>
+                                  </div>
+                                </div>
+          
+                                <div class="bound_criterion">
+                                    
+                                  <div class="row">
+                                    <div class="col-sm-5">
+                                      <h4 for="atags_tag_page_attribute_name"> 
+                                        Характеристики
+                                      </h4>
+                                    </div>
+                                    
+                                  </div>
+                                  <div class="row">
+                                    <div class="col-sm-5">
+                                        <atags-input-finder :find="'attributes'" v-model="current.inputs.attributes.name" :list="current.inputs.attributes.name_finder" :container="current.inputs.attributes" :what="'name'" ></atags-input-finder>
+                                        
+                                        <div data-atags-template="input_finder" v-if=" what === 'name' || (what === 'value' && container.temp) || (what && what !== 'value')" class="atags_input_finder" >
+                                          <input type="text" ref="input" :value="modelValue" @focus=" container['focused_'+( (what === 'value' && 'values') || ( what === 'name' && 'name' ) || what )] = true; "  @input=" if( what === 'name' ){ container.temp = undefined; container.name_finder = []; container.values_finder = []; } $emit('update:modelValue', $event.target.value); " /> <span class="search_input_button" :class="{loading: container['loading_'+what]}" @click="find_bd( container , what , modelValue , find )"></span> 
+                                          <div v-if="container['focused_'+( (what === 'value' && 'values') || ( what === 'name' && 'name' ) || what )] && container[ ( (what === 'value' && 'values') || (what === 'name' && 'name') || what ) + '_finder' ].length " class="atags_input_found"> <atags-input-found-item v-for="item in list" :item="item" :container="container" :what="what"></atags-input-found-item> </div>
+                                        </div>
+
+                                        <div data-atags-template="input_found_item" v-if=" what === 'name' || (what === 'value' && container.temp) || what " class="atags_input_found_item" @click="this.setTemp( item, container, what )">\{\{ ((item.name !== undefined && item.name) || (item.value !== undefined && item.value)) \}\}</div>
+
+                                    </div>
+                                    <div class="col-sm-5">
+                                        <atags-input-finder :find="'attributes'" v-model="current.inputs.attributes.value" :list="current.inputs.attributes.values_finder" :container="current.inputs.attributes" :what="'value'" ></atags-input-finder>
+
+                                    </div>
+
+                                      <atags-add-bound-value :container="current" :to="'attributes'" ></atags-add-bound-value>
+
+                                    <div class="add-bound-value" v-if="container.inputs[to].temp && container.inputs[to].temp.name /*&& container.inputs[to].temp.values*/ " data-atags-template="add_bound_value" >
+                                      <span  @click="add(container, to)" class="pointer_"><i class="fa fa-plus"></i></span>
+                                    </div>
+
+                                  </div>
+                                  <div class="row container_values">
+
+                                        <atags-bound-values v-for="item in current.bound_values.attributes" :item="item" :items="item.values" :container="current.bound_values.attributes" :to="'attributes'"></atags-bound-values>
+
+                                        <div data-atags-template="bound_values" class="atags_bound_values row"> 
+                                        <div class="atags_bound_values_names col-sm-5"> 
+                                          <span @click="this.edit( item , to )" class="pointer_"><i class="fa fa-pencil"></i></span><span class="pointer_" @click="this.delete(item,container)"><i class="fa fa-times"></i></span>  \{\{item.name\}\}
+                                        </div> 
+                                        <div class="atags_bound_values_items col-sm-7" > 
+                                          <atags-bound-values-item :items="items" v-for="item in items" :item="item"></atags-bound-values-item>
+                                        </div>
+                                        </div>
+
+                                        <div data-atags-template="bound_values_item" v-if="item" class="atags_bound_values_item" :class="{like_value: item.strict == '0'}" >\{\{ item.name || item.value \}\} <div class="delete_item" @click="this.delete( item , items )">×</div> </div>
+
+                                  </div>
+                                </div>
+
+
+                                <div class="bound_criterion">
+                                  <div class="row">
+                                    <div class="col-sm-5">
+                                      <h4 for="atags_tag_page_attribute_name"> 
+                                        Опции
+                                      </h4>
+                                    </div>
+                                  </div>
+                                  <div class="row">
+
+                                    <div class="col-sm-5">
+                                        <atags-input-finder :find="'options'" v-model="current.inputs.options.name" :list="current.inputs.options.name_finder" :container="current.inputs.options" :what="'name'" ></atags-input-finder>
+                                        
+                                    </div>
+                                    <div class="col-sm-5">
+                                        <atags-input-finder :find="'options'" v-model="current.inputs.options.value" :list="current.inputs.options.values_finder" :container="current.inputs.options" :what="'value'" ></atags-input-finder>
+                                    </div>
+
+                                      <atags-add-bound-value :container="current" :to="'options'" ></atags-add-bound-value>
+
+                                  </div>
+                                  <div class="row container_values">
+
+                                        <atags-bound-values v-for="item in current.bound_values.options" :item="item" :items="item.values" :container="current.bound_values.options" :to="'options'"></atags-bound-values>
+
+                                  </div>
+                                </div>
+
+                            </div>
+
+                          </div>
+
+                          
+
+
+
+                        <div>
+                          <h3> 
+                            Ручная привязка
+                          </h3>
+
+                          <div class="atags_body">
+                          
+                            <div class="row">
+                              <div class="col-sm-1">
+                                <label > 
+                                  Ид.
+                                </label>
+                              </div>
+                              <div class="col-sm-2">
+                                <label > 
+                                  Модель
+                                </label>
+                              </div>
+                              <div class="col-sm-3">
+                                <label > 
+                                  Название
+                                </label>
+                              </div>
+                              <div  class="col-sm-3" >
+                                <label > 
+                                  Категория
+                                </label>
+                              </div>
+                            </div>
+                            <div class="row">
+                              <div class="col-sm-1">
+                                  <input name="input_products_id" id="atags_tag_page_products_id" type="text" v-model="current.inputs.products.product_id"/> 
+                              </div>
+                              <div class="col-sm-2">
+                                  <input name="input_products_model" id="atags_tag_page_products_model" type="text" v-model="current.inputs.products.model"/> 
+                              </div>
+                              <div class="col-sm-3">
+                                  <input name="input_products_name" id="atags_tag_page_products_name" type="text" v-model="current.inputs.products.name"/> 
+                              </div>
+                              <div class="col-sm-3">
+                                  <atags-input-finder :find="'categories'" v-model="current.inputs.products.category_value" :list="current.inputs.products.category_finder" :container="current.inputs.products" :what="'category'"></atags-input-finder>
+                              </div>
+
+                                <atags-filter-products :current="current"></atags-filter-products>
+
+                                <div data-atags-template="filter_products" class="filter_products">
+                                  <span class="pointer_" @click="this.filter_products(current)" ><i v-if="current.loadings.filter_products" class="fa fa-circle-o-notch"></i><i v-else class="fa fa-filter"></i></span>
+                                </div>
+                            </div>
+                            
+                            
+
+                            <atags-products-found :list="current.found_products"></atags-products-found>
+
+                            <div v-if="list.length"  data-atags-template="products_found" >
+                              <span class="count_header" v-if="list.length" >Найдено: \{\{list.length\}\}</span>
+                              <div class="atags_list_products_found">
+                                <atags-products-list-found :list="list"></atags-products-list-found>
+                              </div>
+
+                              <div data-atags-template="products_list_found" v-for="item in list" class="atags_list_product"><span class="add pointer_" @click="this.add(item,list)"><i class="fa fa-plus"></i></span> \{\{item.product_id\}\} — \{\{item.model\}\} — \{\{item.name\}\} </div>
+                            </div>
+
+                          </div>
+
+                        </div>
+
+                        <div>
+                            <h3> 
+                              Привязанные продукты <span class="count_header" v-if="current.bound_products.length" v-html="current.bound_products.length"></span>
+                            </h3>
+
+                            <div class="atags_body">
+
+                              <atags-products-bound :list="current.bound_products"></atags-products-bound>
+
+                              <div class="atags_list_products_bound" data-atags-template="products_bound">
+                                <atags-products-list-bound v-if="list.length"  :list="list"></atags-products-list-bound>
+                                <div v-else>Нет привязанных продуктов</div>
+                                <div data-atags-template="products_list_bound" v-for="item in list" class="atags_list_product"><span v-if="item.manually === '1'" class="delete pointer_" @click="this.delete(item,list)"><i class="fa fa-times"></i></span> \{\{item.product_id\}\} — \{\{item.model\}\} — \{\{item.name\}\} </div>
+                              </div>
+                            </div>
+                          </div>
+                          <div>
+                            <atags-button :current="current" ></atags-button>
+                          </div>
+                        
+                          <button data-atags-template="button" v-if=" current.changed === true || current.changed === undefined " class="button_send" @click="current.setting ? saveSettings() : saveTab()"><template v-if="( current.loadings && current.loadings.send ) || ( current.setting && current.loading ) "><span><i class="fa fa-circle-o-notch"></i></span></template><template v-else-if="current.setting || current.tag_id">Сохранить</template><template v-else>Создать</template></button>
+                        
+                       
+                    </div>
+
+            </div>
+        </div>
+    </div>
+
+</div>
+
+  
+
+
+{{ footer }}

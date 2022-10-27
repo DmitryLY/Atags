@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="utf-8"?>
+<modification>
+  <name>ATags</name>                
+  <code>ATags</code>                
+  <version>Beta</version>           
+  <author>Dmitry Y Lepikhin</author>
+  <link></link>
+
+    <file path="catalog/controller/product/category.php"> 
+
+        <operation>
+            <search trim="true" >                         
+            <![CDATA[ $data['breadcrumbs'] = array(); ]]>
+            </search>
+            <add position="after" trim="true" >            
+            <![CDATA[ 
+                $atags = isset($this->request->get['atags']) && $this->config->get('module_atags_status') ? (int)$this->request->get['atags'] : 0 ;
+                
+                if( $atags ){
+                    $cat_id = $this->db->query(" SELECT `category_id` FROM `".DB_PREFIX."atags_tags` WHERE `tag_id` = ".$atags." ")->row;
+                    if( $cat_id = (int)$cat_id['category_id'] ){
+                        $path_ = $cat_id;
+
+                        while( $parent_id =  $this->db->query(" SELECT `parent_id` FROM `".DB_PREFIX."category` WHERE `category_id` = ". $cat_id ." ")->row ){
+                            $cat_id = $parent_id['parent_id'];
+                            if(!$cat_id) break;
+                            $path_ = $cat_id . '_' . $path_ ;
+                        }
+
+                        $this->request->get['path'] = $path_;
+                    }
+                }
+            ]]>
+            </add>
+        </operation> 
+
+        <operation>
+            <search trim="true" >                         
+            <![CDATA[ $category_id = (int)array_pop($parts); ]]>
+            </search>
+            <add position="replace" trim="true" >            
+            <![CDATA[ 
+                $category_id = $atags ? $parts[count($parts)-1] : (int)array_pop($parts);
+            ]]>
+            </add>
+        </operation>
+    
+        <operation>
+            <search trim="true" >                         
+            <![CDATA[ $category_info = $this->model_catalog_category->getCategory($category_id); ]]>
+            </search>
+            <add position="replace" trim="true" >            
+            <![CDATA[ 
+                
+                if( !$atags ){////atags
+                    $category_info = $this->model_catalog_category->getCategory($category_id);
+                }else{/// $this->request->get['atags']
+                    $category_info = $this->db->query(" SELECT `full_name` as `name`, `meta_title`, `meta_description`, '' as `meta_keyword`, '' as `path`, NULL as `image`, `description`, `header_h1` FROM `".DB_PREFIX."atags_stores` left join `".DB_PREFIX."atags_description` USING (`tag_id`) left join ( SELECT `tag_id`, `status` FROM `".DB_PREFIX."atags_tags`) t USING (tag_id)  WHERE `full_name` <> '' AND t.status = 1 AND `tag_id` = ".(int)$atags." ")->row;
+                    $data['header_h1'] = html_entity_decode($category_info['header_h1'], ENT_QUOTES, 'UTF-8'); 
+                }
+            ]]>
+            </add>
+        </operation>
+
+        <operation>
+            <search trim="true" >                         
+            <![CDATA[ $results = $this->model_catalog_category->getCategories($category_id); ]]>
+            </search>
+            <add position="replace" trim="true" >            
+            <![CDATA[ $results = !$atags ? $this->model_catalog_category->getCategories($category_id) : []; ]]>
+            </add>
+        </operation>
+
+        <operation>
+            <search trim="true" >                         
+            <![CDATA[ $data['products'] = array(); ]]>
+            </search>
+            <add position="after" trim="true" offset="1" >            
+            <![CDATA[ if( $atags ) $category_id = 0; ]]>
+            </add>
+        </operation>
+
+        <operation>
+            <search trim="true" >                         
+            <![CDATA[ $filter_data = array( ]]>
+            </search>
+            <add position="after" trim="true" >            
+            <![CDATA[ 'filter_atags'       => $atags,////atags ]]>
+            </add>
+        </operation>
+
+        <operation>
+            <search trim="true" >                         
+            <![CDATA[ , 'path=' . $this->request->get['path'] . '_' . $result['category_id'] ]]>
+            </search>
+            <add position="replace" trim="true" >            
+            <![CDATA[ , ( $atags ? 'atags='. $atags : 'path=' . $result['category_id'] . '_' . $result['category_id'] ) ]]>
+            </add>
+        </operation>
+
+        <operation>
+            <search trim="true" >                         
+            <![CDATA[ , 'path=' . $this->request->get['path'] ]]>
+            </search>
+            <add position="replace" trim="true" >            
+            <![CDATA[ , ( $atags ? 'atags='. $atags : 'path=' . $this->request->get['path'] ) ]]>
+            </add>
+        </operation>
+
+        <operation>
+            <search trim="true" >                         
+            <![CDATA[ 'path=' . $category_info['category_id'] ]]>
+            </search>
+            <add position="replace" trim="true" >            
+            <![CDATA[ ( $atags ? 'atags='. $atags : 'path=' . $category_info['category_id'] ) ]]>
+            </add>
+        </operation>
+
+    </file>
+
+    <file path="catalog/model/catalog/product.php">  
+    
+        <operation>
+            <search trim="true">                         
+            <![CDATA[ if (!empty($data['filter_manufacturer_id'])) { ]]>
+            </search>
+            <add position="before" trim="true" offset="1">            
+            <![CDATA[ 
+                if ( !empty($data['filter_atags']) ) {////////////atags
+                    $sql .= " AND p.`product_id` in ( SELECT `product_id` FROM `".DB_PREFIX."atags_tags_to_products` WHERE `tag_id` = ".(int)$data['filter_atags']." ) ";
+                }
+            ]]>
+            </add>
+        </operation>
+
+    </file>
+
+    <file path="catalog/controller/startup/seo_url.php">  
+    
+        <operation>
+            <search trim="true">                         
+            <![CDATA[ $url = explode('=', $query->row['query']); ]]>
+            </search>
+            <add position="after" trim="true" offset="1">            
+            <![CDATA[ 
+                if ($url[0] == 'atags') {
+                    $this->request->get['atags'] = $url[1];
+                    $this->request->get['route'] = 'product/category';
+                    break;
+                }
+            ]]>
+            </add>
+        </operation>
+
+        <operation>
+            <search trim="true">                         
+            <![CDATA[ ($data['route'] == 'product/product' ]]>
+            </search>
+            <add position="replace" trim="true" >            
+            <![CDATA[ ($data['route'] == 'product/category' && $key == 'atags' ) || ($data['route'] == 'product/product' ]]>
+            </add>
+        </operation>
+
+    </file>
+
+</modification>
