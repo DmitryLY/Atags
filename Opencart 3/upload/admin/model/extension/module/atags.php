@@ -285,6 +285,8 @@ class ModelExtensionModuleAtags extends Model{
 
         $json['stores'] = $this->getStores();
 
+        $json['language_'] = $this->load->language('extension/module/atags');
+
         $json['settings'] = [];
         $json['settings']['status'] = $this->config->get('module_atags_status');
 

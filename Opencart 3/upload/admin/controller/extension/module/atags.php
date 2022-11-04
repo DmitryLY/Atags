@@ -64,15 +64,15 @@ class ControllerExtensionModuleAtags extends Controller{
 
         $data = [];
 
-
-        $data['heading_title'] = 'ATags';
+        $data['language'] = $this->load->language('extension/module/atags');
+        $data['language']['default_store'] = $this->language->get('text_default');
 
 		$this->document->addStyle('view/stylesheet/atags/atags.css?c='. filemtime('view/stylesheet/atags/atags.css') );
 		$this->document->addScript('view/javascript/atags/vue.global.prod.js?c='. filemtime('view/javascript/atags/vue.global.prod.js') );
 		$this->document->addScript('view/javascript/atags/atags.js?c='. filemtime('view/javascript/atags/atags.js') );
 
 
-		$this->document->setTitle($data['heading_title']);
+		$this->document->setTitle($data['language']['heading_title']);
 
 		$data['header'] = $this->load->controller('common/header');
         $data['column_left'] = $this->load->controller('common/column_left');
@@ -91,7 +91,7 @@ class ControllerExtensionModuleAtags extends Controller{
 		);
 
         $data['breadcrumbs'][] = array(
-			'text' => $data['heading_title'],
+			'text' => $data['language']['heading_title'],
 			'href' => $this->url->link('extension/module/atags', 'user_token='. $this->session->data['user_token'], true)
 		);
 

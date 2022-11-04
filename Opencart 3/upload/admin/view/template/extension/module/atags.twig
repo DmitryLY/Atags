@@ -15,7 +15,7 @@
         <span id="refresh_binding_cont">
           <atags-button-refresh ></atags-button-refresh>
         </span>
-        <button data-atags-template="button_refresh" ref="button" @click="refresh_binding()" data-toggle="tooltip" title="Перепривязать продукты" id="refresh_binding" class="btn btn-default"><i class="fa fa-refresh"></i></button>
+        <button data-atags-template="button_refresh" ref="button" @click="refresh_binding()" data-toggle="tooltip" title="{{language.refresh_tags}}" id="refresh_binding" class="btn btn-default"><i class="fa fa-refresh"></i></button>
         <a href="{{ cancel }}" data-toggle="tooltip" title="{{ button_cancel }}" class="btn btn-default"><i class="fa fa-reply"></i></a>
       </div>
  
@@ -70,14 +70,14 @@
                       <div id="atags_list_filter">
                           <div>
                             <label for="atags_list_filter_name">
-                              Название тэга
+                              {{language.filter_name_tag}}
                               <input v-model="current.query_string" id="atags_list_filter_name" type="text"/>
                             </label>
                             <label for="atags_list_filter_store">
-                              Магазин
+                              {{language.filter_store_tag}}
                               <select v-model="current.query_store_id" id="atags_list_filter_store">
-                                <option value="all" selected>Все</option>
-                                <option value="0">Основной</option>
+                                <option value="all" selected>{{language.filter_all}}</option>
+                                <option value="0">{{language.default_store}}</option>
                               </select>
                             </label>
                             
@@ -89,15 +89,15 @@
                       <div v-if="current.list_limit.length" id="atags_list_tags">
                         <atags-list-item v-for="item in current.list_limit" :item="item"></atags-list-item>
                         <div data-atags-template="list_item" class="atags_list_tag">
-                          <span class="atags_list_tag_edit pointer_" @click="createTab(item.tag_id)" data-toggle="tooltip" title="Редактировать"><i class="fa fa-pencil"></i></span>
-                          <span @click="createTab(item.tag_id , true)" class="atags_list_tag_copy pointer_"  data-toggle="tooltip" title="Копировать"><i class="fa fa-copy"></i></span>
+                          <span class="atags_list_tag_edit pointer_" @click="createTab(item.tag_id)" data-toggle="tooltip" title="{{language.edit}}"><i class="fa fa-pencil"></i></span>
+                          <span @click="createTab(item.tag_id , true)" class="atags_list_tag_copy pointer_"  data-toggle="tooltip" title="{{language.copy}}"><i class="fa fa-copy"></i></span>
                           {#<span class="atags_list_tag_view pointer_"><i class="fa fa-eye"></i></span>#}
-                          <span class="atags_list_tag_delete pointer_" @click="deleteTag( item )" data-toggle="tooltip" title="Удалить"><i class="fa fa-times"></i></span>
+                          <span class="atags_list_tag_delete pointer_" @click="deleteTag( item )" data-toggle="tooltip" title="{{language.delete}}"><i class="fa fa-times"></i></span>
                           <span class="atags_list_tag_name">\{\{item.name\}\}</span> {#— <span class="atags_list_tag_store">\{\{item.store\}\}</span>#}
                         </div>
                       </div>
 
-                      <div v-if="!current.list_limit.length" class="atags_list_tag">Нет тэгов</div>
+                      <div v-if="!current.list_limit.length" class="atags_list_tag">{{language.not_tags}}</div>
 
                       <div v-if="current.list.length > current.limit" id="atags_list_pagination">
                         <ul>
@@ -115,11 +115,11 @@
                     
                       <div>
                         <label for="atags_tag_page_status"> 
-                          Статус плагина
+                          {{language.status_module}}
                         </label>
                         <select name="status" id="atags_tag_page_status" v-model="current.status"> 
-                          <option value="1" >Включен</option>
-                          <option value="0" >Отключен</option>
+                          <option value="1" >{{language.enabled}}</option>
+                          <option value="0" >{{language.disabled}}</option>
                         </select>
                       </div>
 
@@ -133,11 +133,11 @@
                       
                       <div>
                         <label for="atags_tag_page_status"> 
-                          Статус тэга
+                          {{language.status_tag}}
                         </label>
                         <select name="status" id="atags_tag_page_status" v-model="current.status"> 
-                          <option value="1" >Включен</option>
-                          <option value="0" >Отключен</option>
+                          <option value="1" >{{language.enabled}}</option>
+                          <option value="0" >{{language.disabled}}</option>
                         </select>
                       </div>
 
@@ -152,7 +152,7 @@
                     
                             <div class="row form-group">
                               <label for="atags_tag_page_name" class="col-sm-2 control-label"> 
-                                Название
+                                {{language.name}}
                               </label>
                               <div class="col-sm-10">
 
@@ -170,7 +170,7 @@
                             </div>
                             <div class="row form-group">
                               <label for="atags_tag_page_short_name" class="col-sm-2 control-label"> 
-                                Короткое название
+                                {{language.short_name}}
                               </label>
                               <div class="col-sm-10">
                                <atags-input-desc :current="current" :field="'short_name'"></atags-input-desc>
@@ -179,7 +179,7 @@
                             </div>
                             <div class="row form-group">
                               <label for="atags_tag_page_full_name" class="col-sm-2 control-label"> 
-                                Полное название
+                                {{language.full_name}}
                               </label>
                               <div class="col-sm-10">
                                <atags-input-desc :current="current" :field="'full_name'"></atags-input-desc>
@@ -188,7 +188,7 @@
                             </div>
                             <div class="row form-group">
                               <label for="atags_tag_page_title" class="col-sm-2 control-label"> 
-                                Meta title
+                                {{language.meta_title}}
                               </label>
                               <div class="col-sm-10">
                                <atags-input-desc :current="current" :field="'meta_title'"></atags-input-desc>
@@ -197,7 +197,7 @@
                             </div>
                             <div class="row form-group">
                               <label for="atags_tag_page_header" class="col-sm-2 control-label"> 
-                                Header H1
+                                {{language.header_h1}}
                               </label>
                               <div class="col-sm-10">
                                <atags-input-desc :current="current" :field="'header_h1'"></atags-input-desc>
@@ -206,7 +206,7 @@
                             </div>
                             <div class="row form-group">
                               <label for="atags_tag_page_meta_desc" class="col-sm-2 control-label"> 
-                                Meta description
+                                {{language.meta_desc}}
                               </label>
                               <div class="col-sm-10">
                                <atags-input-desc :current="current" :field="'meta_description'"></atags-input-desc>
@@ -215,7 +215,7 @@
                             </div>
                             <div class="row form-group">
                               <label for="atags_tag_page_meta_desc" class="col-sm-2 control-label"> 
-                                SEO URL
+                                {{language.seo_url}}
                               </label>
                               <div class="col-sm-10">
 
@@ -234,7 +234,7 @@
                             </div>
                             <div class="row form-group">
                               <label for="atags_tag_page_desc" class="col-sm-2 control-label"> 
-                                Описание
+                                {{language.description}}
                               </label>
                               <div class="col-sm-10">
                                <atags-input-desc :current="current" :field="'description'"></atags-input-desc>
@@ -251,7 +251,7 @@
                           </div>
 
                           <div>
-                            <h3>Магазины</h3>
+                            <h3>{{language.stores_tag}}</h3>
                             <div class="atags_body stores">
                               <atags-stores v-for="item in stores" :item="item" :current="current" ></atags-stores>
                               <label data-atags-template="stores" >
@@ -261,7 +261,7 @@
                           </div>
 
                           <div>
-                            <h3>Категория</h3>
+                            <h3>{{language.category_tag}}</h3>
 
                             <div class="atags_body">
                             
@@ -280,7 +280,7 @@
                           </div>
                           
                           <div>
-                            <h3>Привязать продукты по критериям</h3>
+                            <h3>{{language.bind_by_crits}}</h3>
 
                             <div class="atags_body">
 
@@ -288,7 +288,7 @@
                                   <div class="row">
                                     <div class="col-sm-5">
                                       <h4> 
-                                        Категории
+                                        {{language.categories_tag}}
                                       </h4>
                                     </div>
                                   </div>
@@ -310,7 +310,7 @@
                                   <div class="row">
                                     <div class="col-sm-5">
                                       <h4 for="atags_tag_page_attribute_name"> 
-                                        Характеристики
+                                        {{language.attributes_tag}}
                                       </h4>
                                     </div>
                                     
@@ -362,7 +362,7 @@
                                   <div class="row">
                                     <div class="col-sm-5">
                                       <h4 for="atags_tag_page_attribute_name"> 
-                                        Опции
+                                        {{language.options_tag}}
                                       </h4>
                                     </div>
                                   </div>
@@ -396,7 +396,7 @@
 
                         <div>
                           <h3> 
-                            Ручная привязка
+                            {{language.manually_bind}}
                           </h3>
 
                           <div class="atags_body">
@@ -404,22 +404,22 @@
                             <div class="row">
                               <div class="col-sm-1">
                                 <label > 
-                                  Ид.
+                                  {{language.manually_bind_id}}
                                 </label>
                               </div>
                               <div class="col-sm-2">
                                 <label > 
-                                  Модель
+                                  {{language.manually_bind_model}}
                                 </label>
                               </div>
                               <div class="col-sm-3">
                                 <label > 
-                                  Название
+                                  {{language.manually_bind_name}}
                                 </label>
                               </div>
                               <div  class="col-sm-3" >
                                 <label > 
-                                  Категория
+                                  {{language.manually_bind_category}}
                                 </label>
                               </div>
                             </div>
@@ -448,8 +448,8 @@
 
                             <atags-products-found :list="current.found_products"></atags-products-found>
 
-                            <div v-if="list.length"  data-atags-template="products_found" >
-                              <span class="count_header" v-if="list.length" >Найдено: \{\{list.length\}\}</span>
+                            <div v-if="list && list.length"  data-atags-template="products_found" >
+                              <span class="count_header" v-if="list.length" >{{language.manually_bind_found}}\{\{list.length\}\}</span>
                               <div class="atags_list_products_found">
                                 <atags-products-list-found :list="list"></atags-products-list-found>
                               </div>
@@ -463,7 +463,7 @@
 
                         <div>
                             <h3> 
-                              Привязанные продукты <span class="count_header" v-if="current.bound_products.length" v-html="current.bound_products.length"></span>
+                              {{language.bound_products}}<span class="count_header" v-if="current.bound_products.length" v-html="current.bound_products.length"></span>
                             </h3>
 
                             <div class="atags_body">
@@ -472,7 +472,7 @@
 
                               <div class="atags_list_products_bound" data-atags-template="products_bound">
                                 <atags-products-list-bound v-if="list.length"  :list="list"></atags-products-list-bound>
-                                <div v-else>Нет привязанных продуктов</div>
+                                <div v-else>{{language.bound_products_not}}</div>
                                 <div data-atags-template="products_list_bound" v-for="item in list" class="atags_list_product"><span v-if="item.manually === '1'" class="delete pointer_" @click="this.delete(item,list)"><i class="fa fa-times"></i></span> \{\{item.product_id\}\} — \{\{item.model\}\} — \{\{item.name\}\} </div>
                               </div>
                             </div>
@@ -481,7 +481,7 @@
                             <atags-button :current="current" ></atags-button>
                           </div>
                         
-                          <button data-atags-template="button" v-if=" current.changed === true || current.changed === undefined " class="button_send" @click="current.setting ? saveSettings() : saveTab()"><template v-if="( current.loadings && current.loadings.send ) || ( current.setting && current.loading ) "><span><i class="fa fa-circle-o-notch"></i></span></template><template v-else-if="current.setting || current.tag_id">Сохранить</template><template v-else>Создать</template></button>
+                          <button data-atags-template="button" v-if=" current.changed === true || current.changed === undefined " class="button_send" @click="current.setting ? saveSettings() : saveTab()"><template v-if="( current.loadings && current.loadings.send ) || ( current.setting && current.loading ) "><span><i class="fa fa-circle-o-notch"></i></span></template><template v-else-if="current.setting || current.tag_id">{{language.save}}</template><template v-else>{{language.create}}</template></button>
                         
                        
                     </div>

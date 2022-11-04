@@ -1,7 +1,7 @@
 // 2022 (C) Dmitry Y. Lepikhin
 
 window.addEventListener("beforeunload", function(e){
-    return (e.returnValue = "Закрыть?");
+    return;
 })
 
 window.addEventListener("load",function(){
@@ -132,6 +132,7 @@ window.addEventListener("load",function(){
 
             stores = json.stores;
             settings = json.settings;
+            language_ = json.language_;
             
             init_atags();
 
@@ -306,7 +307,7 @@ window.addEventListener("load",function(){
                 var data = {
                     tabs:[
                         {
-                            title: 'Тэги',
+                            title: language_.tags,
                             list: [/*[
                                 {   
                                     id: undefined,
@@ -329,7 +330,7 @@ window.addEventListener("load",function(){
                     setting: true,
                     loading: false,
                     changed: false,
-                    title: 'Настройки',
+                    title: language_.settings,
                     status: 0,
                     saved_: {}
                 };
@@ -451,7 +452,7 @@ window.addEventListener("load",function(){
                         this.current = tab;
                 },deleteTag(item){
 
-                    if( !item.tag_id || !confirm('Тэг будет удалён из базы данных. Продолжить?') ) return;
+                    if( !item.tag_id || !confirm(language_.confirm_delete) ) return;
 
                         var deleted;
 
@@ -474,7 +475,7 @@ window.addEventListener("load",function(){
                             }
                         });
 
-                        if( !deleted ) return alert('Не удалось удалить!');
+                        if( !deleted ) return alert(language_.error_delete);
 
                         atags.tabs[0].list.splice( atags.tabs[0].list.indexOf(item) , 1 );
 
@@ -490,7 +491,7 @@ window.addEventListener("load",function(){
                 closeTab(tab, event){
                     event.stopPropagation();
 
-                    if( ( !tab.tag_id || tab.changed ) && !confirm(' Не сохранённые изменения будут потеряны. Закрыть вкладку? ') ) return ;
+                    if( ( !tab.tag_id || tab.changed ) && !confirm(language_.confirm_close_tag) ) return ;
 
                     var index;
                     if( tab.main || tab.settings || ( index = this.tabs.indexOf(tab) ) === -1 ) return;
@@ -549,10 +550,10 @@ window.addEventListener("load",function(){
 
                             var lang = {   
                                 language_id: languages[item].language_id,
-                                name: "Тэг",
+                                name: language_.name_tag_,
                                 short_name: '',
                                 full_name: '',
-                                meta_title: "Тэг",
+                                meta_title: '',
                                 header_h1: '',
                                 meta_description: '',
                                 description: '',
@@ -673,7 +674,7 @@ window.addEventListener("load",function(){
                             if( ( lang_ == 'name' || lang_ == 'short_name' || lang_ == 'full_name' || lang_ == 'meta_title' ) && lang_arr[lang_].trim() == '' ){
                                 if( !current.errors.langs[lang_arr.language_id] ) 
                                     current.errors.langs[lang_arr.language_id] = {};
-                                current.errors.langs[lang_arr.language_id][lang_] = "Не заполнено";
+                                current.errors.langs[lang_arr.language_id][lang_] = language_.error_empty;
                                 errors = true;
                             }
                             else if( lang_ = 'seo_keyword' )
@@ -684,7 +685,7 @@ window.addEventListener("load",function(){
                                             current.errors.langs[lang_arr.language_id] = {};
                                         if( !current.errors.langs[lang_arr.language_id]['seo_keyword'] ) 
                                             current.errors.langs[lang_arr.language_id]['seo_keyword'] = {};
-                                        current.errors.langs[lang_arr.language_id]['seo_keyword'][store_seo] = "Допустимы буквы,цифры, _ , - , +";
+                                        current.errors.langs[lang_arr.language_id]['seo_keyword'][store_seo] = language_.error_seo_keyword;
                                         errors = true; 
                                     }
                                 }
@@ -725,7 +726,7 @@ window.addEventListener("load",function(){
                                 return;
                             }
 
-                            if( !json.tag_id && !data.tag_id ) return alert('Проблема');
+                            if( !json.tag_id && !data.tag_id ) return alert(language_.error_id);
 
                             current.bound_products = json.bound_products || [];
                             current.bound_values = json.bound_values;
