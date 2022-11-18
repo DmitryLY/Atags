@@ -153,11 +153,11 @@
         </operation>
 
         <operation>
-            <search trim="true">                         
-            <![CDATA[ ($data['route'] == 'product/product' ]]>
+            <search regex="true">                         
+            <![CDATA[ /if\s*\(\s*(\(\s*\$data\['route'\]\s*==\s*'product\/product')/ ]]>
             </search>
-            <add position="replace" trim="true" >            
-            <![CDATA[ ($data['route'] == 'product/category' && $key == 'atags' ) || ($data['route'] == 'product/product' ]]>
+            <add position="replace" regex="true" >            
+            <![CDATA[ if( ($data['route'] == 'product/category' && $key == 'atags' ) || $1 ]]>
             </add>
         </operation>
 
