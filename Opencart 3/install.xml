@@ -52,7 +52,7 @@
             <add position="replace" trim="true" >            
             <![CDATA[ 
                 
-                if( !$atags ){////atags
+                if( !$atags ){
                     $category_info = $this->model_catalog_category->getCategory($category_id);
                 }else{/// $this->request->get['atags']
                     $category_info = $this->db->query(" SELECT `full_name` as `name`, `meta_title`, `meta_description`, '' as `meta_keyword`, '' as `path`, NULL as `image`, `description`, `header_h1` FROM `".DB_PREFIX."atags_stores` left join `".DB_PREFIX."atags_description` USING (`tag_id`) left join ( SELECT `tag_id`, `status` FROM `".DB_PREFIX."atags_tags`) t USING (tag_id)  WHERE `full_name` <> '' AND t.status = 1 AND `tag_id` = ".(int)$atags." ")->row;
@@ -85,7 +85,7 @@
             <![CDATA[ $filter_data = array( ]]>
             </search>
             <add position="after" trim="true" >            
-            <![CDATA[ 'filter_atags'       => $atags,////atags ]]>
+            <![CDATA[ 'filter_atags'       => $atags, ]]>
             </add>
         </operation>
 
@@ -126,14 +126,52 @@
             </search>
             <add position="before" trim="true" offset="1">            
             <![CDATA[ 
-                if ( !empty($data['filter_atags']) ) {////////////atags
+                if ( !empty($data['filter_atags']) ) {
                     $sql .= " AND p.`product_id` in ( SELECT `product_id` FROM `".DB_PREFIX."atags_tags_to_products` WHERE `tag_id` = ".(int)$data['filter_atags']." ) ";
                 }
             ]]>
             </add>
         </operation>
 
+        <operation>
+            <search trim="true">                         
+            <![CDATA[ $sql = "SELECT COUNT(DISTINCT p.product_id) AS total"; ]]>
+            </search>
+            <add position="after" trim="true" offset="1">            
+            <![CDATA[ 
+                $atags = $this->config->get('module_atags_status');
+            
+                if( $atags )
+                    $sql = " SELECT p.product_id AS product_id ";
+            ]]>
+            </add>
+        </operation>
+
+        <operation>
+            <search trim="true">                         
+            <![CDATA[ return $query->row['total']; ]]>
+            </search>
+            <add position="before" trim="true" offset="1">            
+            <![CDATA[ 
+                if( $atags ){
+
+                    $products_atags = [];
+
+                    foreach( $query->rows as $p_id ){
+                    $products_atags[] = $p_id['product_id'];
+                    }
+
+                    $this->registry->set('products_atags', $products_atags);
+
+                    return $query->num_rows;
+
+                }
+            ]]>
+            </add>
+        </operation>
+
     </file>
+
 
     <file path="catalog/controller/startup/seo_url.php">  
     
