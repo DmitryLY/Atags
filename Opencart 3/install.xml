@@ -94,7 +94,7 @@
             <![CDATA[ , 'path=' . $this->request->get['path'] . '_' . $result['category_id'] ]]>
             </search>
             <add position="replace" trim="true" >            
-            <![CDATA[ , ( $atags ? 'atags='. $atags : 'path=' . $result['category_id'] . '_' . $result['category_id'] ) ]]>
+            <![CDATA[ , ( $atags ? 'atags='. $atags : 'path=' . $this->request->get['path'] . '_' . $result['category_id'] ) ]]>
             </add>
         </operation>
 
