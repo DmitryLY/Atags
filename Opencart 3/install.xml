@@ -90,29 +90,29 @@
         </operation>
 
         <operation>
-            <search trim="true" >                         
-            <![CDATA[ , 'path=' . $this->request->get['path'] . '_' . $result['category_id'] ]]>
+            <search regex="true" >                         
+            <![CDATA[ /('product\/category'\s*,\s*'path='\s*\.\s*\$this->request->get\['path'\]\s*\.\s*'_'\s*\.\s*\$result\['category_id'\])/ ]]>
             </search>
-            <add position="replace" trim="true" >            
-            <![CDATA[ , ( $atags ? 'atags='. $atags : 'path=' . $this->request->get['path'] . '_' . $result['category_id'] ) ]]>
+            <add position="replace" >            
+            <![CDATA[ $1 . ( $atags ? '&atags='. $atags : '' ) ]]>
             </add>
         </operation>
 
         <operation>
-            <search trim="true" >                         
-            <![CDATA[ , 'path=' . $this->request->get['path'] ]]>
+            <search regex="true" >                         
+            <![CDATA[ /('product\/category'\s*,\s*'path='\s*\.\s*\$this->request->get\['path'\])/ ]]>
             </search>
-            <add position="replace" trim="true" >            
-            <![CDATA[ , ( $atags ? 'atags='. $atags : 'path=' . $this->request->get['path'] ) ]]>
+            <add position="replace" >            
+            <![CDATA[ $1 . ( $atags ? '&atags='. $atags : '' ) ]]>
             </add>
         </operation>
 
         <operation>
-            <search trim="true" >                         
-            <![CDATA[ 'path=' . $category_info['category_id'] ]]>
+            <search regex="true" >                         
+            <![CDATA[ /('path='\s*\.\s*\$category_info\['category_id'\])/ ]]>
             </search>
-            <add position="replace" trim="true" >            
-            <![CDATA[ ( $atags ? 'atags='. $atags : 'path=' . $category_info['category_id'] ) ]]>
+            <add position="replace" >            
+            <![CDATA[ $1 . ( $atags ? '&atags='. $atags : '' ) ]]>
             </add>
         </operation>
 
@@ -142,7 +142,7 @@
                 $atags = $this->config->get('module_atags_status');
             
                 if( $atags )
-                    $sql = " SELECT p.product_id AS product_id ";
+                    $sql = " SELECT DISTINCT p.product_id AS product_id ";
             ]]>
             </add>
         </operation>
